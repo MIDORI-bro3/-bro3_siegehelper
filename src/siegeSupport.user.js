@@ -7,7 +7,6 @@
 // @include		*://w20.3gokushi.jp/user/*
 // @connect		3gokushi.jp
 // @author      みどり
-// @version 	0.4
 // @updateURL	https://github.com/MIDORI-bro3/-bro3_siegehelper/blob/master/src/siegeSupport.user.js
 // @grant none
 // @grant GM_setValue
@@ -16,13 +15,17 @@
 // @require	https://code.jquery.com/jquery-2.1.4.min.js
 // @require	https://code.jquery.com/ui/1.11.4/jquery-ui.min.js
 // @resource	jqueryui_css	http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css
-// ==/UserScript==
+// @version 	0.5.0
+// ==================
 // 2021.05.23	0.2.0  配布初期バージョン
 // 2021.05.29	0.3.0  公開用情報の追加　w20での動作のみに変更 隣接報告機能を追加
 // 2021.05.29	0.4.0  ユーザ名の自動取得
 // 2021.05.29	0.4.1  空名バグ修正
 // 2021.05.29   0.4.2  コピペしたら空白文字コードが不具合対応(スペース抜いて一致判定)
-var VERSION = "0.4.2";
+// 2021.05.29   0.5.0  予約解除処理の追加
+//
+// ==/UserScript==
+var VERSION = "0.5.0";
 
 var HOST = location.hostname;
 var $ = window.jQuery;//OR
@@ -36,8 +39,8 @@ var g_helper_options;
 // ユーザー名（SSに表示する名前を変える場合はここに名前を入れる")
 
 var userName = "";//"みどり";
-//GasアプリURL(バージョン 24
-var gasUrl = 'https://script.google.com/macros/s/AKfycbwMSBhwwpvdXdvxfsxxF4PHWRttoP5pnpZEwVTHZQhtS2lr6pxmuc7CFJEQOYTzl1S61w/exec';
+//GasアプリURL(バージョン 25
+var gasUrl = 'https://script.google.com/macros/s/AKfycbzXRGgd2mjf32S93xMfqPYtfdk5GAwRZ0O_JohLfgpVQ_oFw7WtPzQsjoVmuplDH1WlvQ/exec';
 //その他スプシ関連項目
 var attackerKey = '攻略者'
 //GM用タグ？
@@ -100,7 +103,7 @@ var SORT_DOWN_ICON = BASE_URL + "/20160427-03/extend_project/w945/img/trade/icon
     //ボタン3(予約確認))
     $("#tMenu_btnif").after("<button id='siegehelper_button_update' disabled=false >予約確認</button>");
     //ボタン2(解除)
-    $("#tMenu_btnif").after("<button id='siegehelper_button_reservation_cancel' disabled=false>予約解除（未実装です・・・)</button>");
+    $("#tMenu_btnif").after("<button id='siegehelper_button_reservation_cancel' disabled=false>予約解除</button>");
     //ボタン1(予約)
     $("#tMenu_btnif").after("<button id='siegehelper_button_reservation' disabled=false>攻略予約</button>");
     //情報表示用テキストボックス
@@ -115,12 +118,43 @@ var SORT_DOWN_ICON = BASE_URL + "/20160427-03/extend_project/w945/img/trade/icon
         //alert("Your name are"+userName+"?");
     }
     //ボタンクリックで動作するイベントを設定
+    $('#siegehelper_button_reservation_cancel').on('click',function(){reservation_cancle();});
     $('#siegehelper_button_update').on('click',function(){reservation_check();});
     $('#siegehelper_button_reservation').on('click',function(){reservation_make();});
     $('#siegehelper_button_adjecent').on('click',function(){report_adjecent();});
 
     //オープン時に一発予約確認
     reservation_check();
+
+　　// 予約解除処理
+    function reservation_cancle(){
+        // 送信情報配列
+        var reqpalam = {
+            'func':'DeleteReservation',
+            'fortName':baseName,
+            'playerName':userName,
+            'note':""
+        };
+        //多重クリック禁止用
+        button_controler(0);//全部トーンダウン
+        $("#SiegeHleper_outtext").val( "予約解除処理中:Please wait");
+        $.ajax({
+            type: "GET",
+            url: gasUrl,
+            data: reqpalam,
+            dataType:'jsonp',//jsonpの場合POSTが使えないらしい。。。
+            callback: 'callback'//コールバックパラメータ名の指定
+        }).done(function(data) {
+            //成功時の処理
+            //予約結果確認
+           reservation_check();
+        }).fail(function(jqXHR, textStatus, errorThrown){
+            $("#SiegeHleper_outtext").val("なんかエラー：エラー処理(予約確認)\n"
+                                          +"XMLHttpRequest : " + jqXHR.status
+                                          + "\ntextStatus     : " + textStatus
+                                          + "\nerrorThrown: " + errorThrown.message);
+        });
+    }
 
 　　// 隣接報告処理
     function report_adjecent(){
