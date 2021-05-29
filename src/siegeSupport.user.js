@@ -1,36 +1,45 @@
 //////////////////////
 // ==UserScript==
 // @name		NPC砦攻略支援ツール
-// @namespace
+// @namespace   NPC砦攻略支援ツール
 // @description	ブラウザ三国志 NPC攻略用の予約をスプレッドシートと同期
 // @include		*://w20.3gokushi.jp/land.php*
+// @include		*://w20.3gokushi.jp/user/*
 // @connect		3gokushi.jp
 // @author      みどり
-// @version 	0.3
+// @version 	0.4
 // @updateURL	https://github.com/MIDORI-bro3/-bro3_siegehelper/blob/master/src/siegeSupport.user.js
-// @grant	none
+// @grant none
+// @grant GM_setValue
+// @grant GM_getValue
+// @grant GM_getResourceText
 // @require	https://code.jquery.com/jquery-2.1.4.min.js
 // @require	https://code.jquery.com/ui/1.11.4/jquery-ui.min.js
 // @resource	jqueryui_css	http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css
 // ==/UserScript==
 // 2021.05.23	0.2	配布初期バージョン
 // 2021.05.29	0.3	公開用情報の追加　w20での動作のみに変更 隣接報告機能を追加
-var VERSION = "0.3";
+// 2021.05.29	0.4	ユーザ名の自動取得
+var VERSION = "0.4";
 
 var HOST = location.hostname;
+var $ = window.jQuery;//OR
+window.jQuery.noConflict();
 
 //----------------------------------------------------------------------
 // グローバル変数群
 //----------------------------------------------------------------------
 // オプション設定管理用
 var g_helper_options;
-// ユーザー名
-var userName = "みどり";
+// ユーザー名（SSに表示する名前を変える場合はここに名前を入れる")
+
+var userName = "";//"みどり";
 //GasアプリURL(バージョン 24
 var gasUrl = 'https://script.google.com/macros/s/AKfycbwMSBhwwpvdXdvxfsxxF4PHWRttoP5pnpZEwVTHZQhtS2lr6pxmuc7CFJEQOYTzl1S61w/exec';
 //その他スプシ関連項目
 var attackerKey = '攻略者'
-
+//GM用タグ？
+var scriptName = "SiegeHleper";
 //----------------------------------------------------------------------
 // 画面設定項目-保存フィールド名対応定数群
 //----------------------------------------------------------------------
@@ -52,17 +61,17 @@ var SORT_DOWN_ICON = BASE_URL + "/20160427-03/extend_project/w945/img/trade/icon
 // メイン処理
 //----------------------------------------------------------------------
 (function() {
-    jQuery.noConflict();
-    var $ = jQuery;
-
-    'use strict';
     // Your code here...
 //////
     // 広告iframe内で呼び出された場合は無視
 	if (!$("#container").length) { return; }
 	// 歴史書モードの場合は無視
 	if ($("#sidebar img[title=歴史書]").length){ return; }
-//////
+    // 共通データの読み出し
+    if( userName === "" ){
+        userName = window.localStorage.getItem(scriptName+SERVER_NAME + '_username');
+    }
+
 	// プロフィール画面
 	if (location.pathname === "/user/" || location.pathname === "/user/index.php") {
         // 他人のプロフィールならtrue
@@ -70,10 +79,10 @@ var SORT_DOWN_ICON = BASE_URL + "/20160427-03/extend_project/w945/img/trade/icon
             return;
         }
         // プロフィール画面のユーザ名取得
-        //userName = $("#gray02Wrapper table[class='commonTables'] tbody tr").eq(1).children("td").eq(1).text().replace(/[ \t\r\n]/g, "");
+        userName = $("#gray02Wrapper table[class='commonTables'] tbody tr").eq(1).children("td").eq(1).text().replace(/[ \t\r\n]/g, "");
+        window.localStorage.setItem( scriptName+SERVER_NAME + '_username', userName);
         return;
 	}
-
     //NPC砦かチェックする
     //タイル一覧のテキストを取得して
     var checkNpc = $.trim($("#production2 li:first").text());
@@ -97,7 +106,7 @@ var SORT_DOWN_ICON = BASE_URL + "/20160427-03/extend_project/w945/img/trade/icon
 
     //var userName = GM_getValue(SERVER_NAME + '_username', null);
     if( "" === userName ){
-        $("#SiegeHleper_outtext").val( "あなたの名前を教えてください:Please tel me your name");
+        $("#SiegeHleper_outtext").val( "名前が不明です。一度プロフィール画面に移動してください:Please tel me your name");
         return;
     }
     else{
