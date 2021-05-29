@@ -17,10 +17,11 @@
 // @require	https://code.jquery.com/ui/1.11.4/jquery-ui.min.js
 // @resource	jqueryui_css	http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css
 // ==/UserScript==
-// 2021.05.23	0.2	配布初期バージョン
-// 2021.05.29	0.3	公開用情報の追加　w20での動作のみに変更 隣接報告機能を追加
-// 2021.05.29	0.4	ユーザ名の自動取得
-var VERSION = "0.4";
+// 2021.05.23	0.2.0  配布初期バージョン
+// 2021.05.29	0.3.0  公開用情報の追加　w20での動作のみに変更 隣接報告機能を追加
+// 2021.05.29	0.4.0  ユーザ名の自動取得
+// 2021.05.29	0.4.1  空名バグ修正
+var VERSION = "0.4.1";
 
 var HOST = location.hostname;
 var $ = window.jQuery;//OR
@@ -87,7 +88,7 @@ var SORT_DOWN_ICON = BASE_URL + "/20160427-03/extend_project/w945/img/trade/icon
     //タイル一覧のテキストを取得して
     var checkNpc = $.trim($("#production2 li:first").text());
     //平地タイル=49ならNPC砦orNPC城...
-    if( checkNpc != "平地タイル  49"){return;}
+    if( checkNpc != "平地タイル  49"){return;}
     // 拠点名を取得
     var baseName = $.trim($("#basepoint span:first").text());
 
@@ -105,7 +106,7 @@ var SORT_DOWN_ICON = BASE_URL + "/20160427-03/extend_project/w945/img/trade/icon
     $("#tMenu_btnif").after("<div><p>Siege Helper</p></div><div style='margin-left: 4px;'><textarea id='SiegeHleper_outtext' cols='40' rows='1' style='overflow: margin: 4px; '></textarea></div>");
 
     //var userName = GM_getValue(SERVER_NAME + '_username', null);
-    if( "" === userName ){
+    if( ("" === userName) || (null == userName)){
         $("#SiegeHleper_outtext").val( "名前が不明です。一度プロフィール画面に移動してください:Please tel me your name");
         return;
     }
